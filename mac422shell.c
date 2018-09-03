@@ -36,28 +36,46 @@
 /**
  * parseArgs - quebra o input e processa
  */
-char **
-parseArgs(Buffer *buffer) {
-    char *c;
-    printf("buffer = %s", (char*) buffer -> data);
-    return(buffer -> data);
+Queue *
+parseArgs(Buffer *b) {
+    Queue *q = queue_new();
+    char *token;
+    // máx numero de args == 32
+    char **args = malloc(sizeof(char*) * 32);
+    int i = 0;
+    while ((token = strsep((char**) &b -> data, " "))) {
+        queue_enqueue(q, token, strlen(token));
+        /* free? */
+        i++;
+    }
+    return(q);
 }
 
 /**
  * readLoop - faz o parse do stdin continuamente
  */
 void readLoop() {
-    Buffer *buffer = buffer_create(sizeof(char));
-    char **args;
-
+    Buffer *b = buffer_create(sizeof(char));
+    Queue *q;
+    char *arg;
+    int n;
+    
     do {
         printf("> ");
-        read_line(stdin, buffer);
-        args = parseArgs(buffer);
-    } while (true);
+        n = read_line(stdin, b);
+        q = parseArgs(b);
+        
+        /* teste */
+        while (!queue_isEmpty(q)) {
+            arg = queue_dequeue(q);
+            printf("arg = %s\n", arg);
+        }
+        
+    } while (n > 0);
 
 
-    free(buffer);
+    buffer_destroy(b);
+    queue_destroy(q);
 }
 
 int main(int argc, char **argv) {

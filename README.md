@@ -1,9 +1,8 @@
 # MAC0422
-Disciplina MAC0422 - 2o semestre 2018
-## ALUNOS:
+## ALUNOS
 Bruno Carneiro da Cunha 10376388
 Guilherme Yambabis
-
+## INSTRUÇÕES
 * Para gerar os executáveis:
 ```$ make```
 
