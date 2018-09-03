@@ -1,10 +1,10 @@
-# MAC0422 - EP1
-
+# MAC0422
+Disciplina MAC0422 - 2o semestre 2018
 ## ALUNOS:
 Bruno Carneiro da Cunha 10376388
 Guilherme Yambabis
 
-1. Para gerar os executáveis:
+* Para gerar os executáveis:
 ```$ make```
 
 * Antes de subir para o repo rode:
