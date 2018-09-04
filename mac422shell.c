@@ -58,7 +58,7 @@ fileIsValid(char *filename) {
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return true;
     else {
-        fprintf(stderr, "file does not exist!\n");
+        fprintf(stderr, "Arquivo nao existe!\n");
         return false;
     }
 }
@@ -73,7 +73,7 @@ getPath(char *bin) {
          *buffer = malloc(strlen(path) + strlen(bin));
     
     if (!buffer) {
-        fprintf(stderr, "getPath(): not enough space for buffer!");
+        fprintf(stderr, "getPath(): sem espaco suficiente no buffer!");
         return false;
     }
 
@@ -118,7 +118,7 @@ runBinary(char *bin, bool paralelo) {
             }
         }
     }
-    else printf("executável não existe no path!\n");
+    else printf("executavel nao existe no PATH!\n");
 }
 
 /**
@@ -143,7 +143,7 @@ processArgs(Queue *q) {
                 struct stat buf;  
                 stat(arg, &buf);
                 int statchmod = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-                printf("file mode changed to: %o\n",statchmod);
+                printf("novo modo do arquivo: %o\n",statchmod);
             }    
         }
     }
@@ -154,7 +154,7 @@ processArgs(Queue *q) {
                 struct stat buf;  
                 stat(arg, &buf);
                 int statchmod = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-                printf("file mode changed to: %o\n",statchmod);
+                printf("novo modo do arquivo: %o\n",statchmod);
             }    
         }
     }
