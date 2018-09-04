@@ -82,7 +82,7 @@ getPath(char *bin) {
         strcat(buffer, "/");
         strcat(buffer, bin);
         if (access(buffer, X_OK) == 0) return buffer;
-        
+        /* reseta o buffer */
         *buffer = '\0';
     }
     
@@ -136,18 +136,18 @@ processArgs(Queue *q) {
         return;
     }
     
-    if (strncmp(token, "protegepracaramba", 17) == 0) {
+    if (strcmp(token, "protegepracaramba") == 0) {
         if (fileIsValid(arg)) {
             if (chmod(arg, 000) < 0) fprintf(stderr, "chmod(): erro!");
         }
     }
-    else if (strncmp(token, "liberageral", 11) == 0) {
+    else if (strcmp(token, "liberageral") == 0) {
         if (fileIsValid(arg)) {
             if (chmod(arg, 777) < 0) fprintf(stderr, "chmod(): erro!");
         }
     }
-    else if (strncmp(token, "rodeveja", 8) == 0) runBinary(arg, false);
-    else if (strncmp(token, "rode", 4) == 0) runBinary(arg, true);
+    else if (strcmp(token, "rodeveja") == 0) runBinary(arg, false);
+    else if (strcmp(token, "rode") == 0) runBinary(arg, true);
     else PRINTINSTR
     
 }
