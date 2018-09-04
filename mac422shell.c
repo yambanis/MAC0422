@@ -38,10 +38,10 @@
 #define PRINTINSTR printf("protegepracaramba <arquivo>\nliberageral <arquivo>\nrodeveja <programa>\nrode <programa>\n");
 
 /**
- * clearNewline - remove o \n do final do string passado
+ * clearNewLine - remove o \n do final do string passado
  */
 void
-clearNewline(char *str) {
+clearNewLine(char *str) {
     char *newline = strchr(str, 10);
     *newline = '\0';
 }
@@ -51,7 +51,7 @@ clearNewline(char *str) {
  */
 bool
 fileIsValid(char *filename) {
-    clearNewline(filename);
+    clearNewLine(filename);
     
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return true;
@@ -62,30 +62,33 @@ fileIsValid(char *filename) {
 }
 
 /**
- * binIsValid - checa se o programa é executável
+ * getPath - procura o programa no path e retorna o binário correto
  */
-bool
-binIsValid(char *bin) {
-    char *path = getenv("PATH"),
+char *
+getPath(char *bin) {
+    char *path = strdup(getenv("PATH")),
          *token, *ptr,
          *buffer = malloc(strlen(path) + strlen(bin));
     
     if (!buffer) {
-        fprintf(stderr, "binIsValid(): not enough space for buffer!");
+        fprintf(stderr, "getPath(): not enough space for buffer!");
         return false;
     }
-    printf("path %s\n", path);
-    bool itRuns = false;
+
     while ((token = strsep(&path, ":"))) {
         strcat(buffer, token);
         strcat(buffer, "/");
         strcat(buffer, bin);
-        if (access(buffer, X_OK) == 0) itRuns = true;
-        printf("buffer = %s\n", buffer);
+        if (access(buffer, X_OK) == 0) return buffer;
+        
         *buffer = '\0';
     }
-    free(buffer);
-    return itRuns;
+    
+    /* tenta rodar no wd */
+    if (bin[0] == '.' && bin[1] == '/')
+        if (access(bin, X_OK) == 0) return bin;
+    
+    return NULL;
 }
 
 /**
@@ -94,9 +97,24 @@ binIsValid(char *bin) {
 void
 runBinary(char *bin, bool paralelo) {
     assert(bin);
-    clearNewline(bin);
-    if (binIsValid(bin)) printf("existe\n");
-    else printf("n existe\n");
+    clearNewLine(bin);
+    if ((bin = getPath(bin))) {
+        pid_t pid = fork();
+        
+        /* PROCESSO FILHO */
+        if (pid == 0)
+            execv(bin, NULL);
+        /* PROCESSO PAI */
+        else {
+            if (!paralelo) {
+                int childStatus;
+                pid_t tid = waitpid(pid, &childStatus, 0);
+                if (tid > 0) printf("=> programa '%s' %d\n", bin, childStatus);
+                else printf("waitpid(): erro\n");
+            }
+        }
+    }
+    else printf("executável não existe no path!\n");
 }
 
 /**
