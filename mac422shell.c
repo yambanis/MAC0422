@@ -102,8 +102,12 @@ runBinary(char *bin, bool paralelo) {
         pid_t pid = fork();
         
         /* PROCESSO FILHO */
-        if (pid == 0)
-            execv(bin, NULL);
+        if (pid == 0) {
+            /* impede que o processo filho imprima na tela */
+            fclose(stdout);
+            fclose(stderr);
+            execve(bin, NULL, NULL);
+        }
         /* PROCESSO PAI */
         else {
             if (!paralelo) {
