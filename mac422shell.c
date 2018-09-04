@@ -6,7 +6,7 @@
      Guilherme Yambabis      NUSP
  
  ENUNCIADO:
- a.protegepracaramba <caminho do arquivo>
+ a. protegepracaramba <caminho do arquivo>
      Faz com que o arquivo dado como parâmetro tenha proteção 000.
  b. liberageral <caminho do arquivo>
      Faz com que o arquivo dado como parâmetro tenha proteção 777.
