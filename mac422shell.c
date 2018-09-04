@@ -3,7 +3,7 @@
  
  ALUNOS:
      Bruno Carneiro da Cunha NUSP 10376388
-     Guilherme Yambabis      NUSP
+     Guilherme Yambabis      NUSP 8041265
  
  ENUNCIADO:
  a. protegepracaramba <caminho do arquivo>
@@ -29,6 +29,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <sys/stat.h>
+
 
 #include "ext/buffer.h"
 #include "ext/queue.h"
@@ -80,5 +82,28 @@ void readLoop() {
 
 int main(int argc, char **argv) {
     readLoop();
+
+    if(argc != 2) {
+        printf("Invalid number of arguments\n");
+        return 1;
+    }
+    char oprt[] = argv[0];
+
+    if(strcmp(oprt, "protegepracaramba") == 0){
+        return chmod(argv[1], 000)
+    } 
+    else if(strcmp(oprt, "liberageral") == 0){
+        return chmod(argv[1], 777)
+    }
+    //else if(strcmp(oprt, "rodeveja") == 0){
+    //}
+    //else if(strcmp(oprt, "rode") == 0){
+    //}
+    else{
+        printf("Invalid operation\n");
+        return 1;
+    }
+
+
     return 0;
-}
+}  
