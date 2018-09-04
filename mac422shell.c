@@ -139,11 +139,23 @@ processArgs(Queue *q) {
     if (strcmp(token, "protegepracaramba") == 0) {
         if (fileIsValid(arg)) {
             if (chmod(arg, 000) < 0) fprintf(stderr, "chmod(): erro!");
+            else {
+                struct stat buf;  
+                stat(arg, &buf);
+                int statchmod = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+                printf("file mode changed to: %o\n",statchmod);
+            }    
         }
     }
     else if (strcmp(token, "liberageral") == 0) {
         if (fileIsValid(arg)) {
-            if (chmod(arg, 777) < 0) fprintf(stderr, "chmod(): erro!");
+            if (chmod(arg, 0777) < 0) fprintf(stderr, "chmod(): erro!");
+            else {
+                struct stat buf;  
+                stat(arg, &buf);
+                int statchmod = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+                printf("file mode changed to: %o\n",statchmod);
+            }    
         }
     }
     else if (strcmp(token, "rodeveja") == 0) runBinary(arg, false);
