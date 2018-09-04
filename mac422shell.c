@@ -37,6 +37,8 @@
 
 #define PRINTINSTR printf("protegepracaramba <arquivo>\nliberageral <arquivo>\nrodeveja <programa>\nrode <programa>\n");
 
+extern char **environ;
+
 /**
  * clearNewLine - remove o \n do final do string passado
  */
@@ -103,10 +105,8 @@ runBinary(char *bin, bool paralelo) {
         
         /* PROCESSO FILHO */
         if (pid == 0) {
-            /* impede que o processo filho imprima na tela */
-            fclose(stdout);
-            fclose(stderr);
-            execve(bin, NULL, NULL);
+            if (paralelo) fclose(stdin);
+            execve(bin, NULL, environ);
         }
         /* PROCESSO PAI */
         else {
