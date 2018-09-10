@@ -2,25 +2,25 @@
  EP1 – MAC422 - Sistemas Operacionais
  
  ALUNOS:
-     Bruno Carneiro da Cunha NUSP 10376388
-     Guilherme Yambabis      NUSP 8041265
+ Bruno Carneiro da Cunha NUSP 10376388
+ Guilherme Yambabis      NUSP 8041265
  
  ENUNCIADO:
  a. protegepracaramba <caminho do arquivo>
-     Faz com que o arquivo dado como parâmetro tenha proteção 000.
+ Faz com que o arquivo dado como parâmetro tenha proteção 000.
  b. liberageral <caminho do arquivo>
-     Faz com que o arquivo dado como parâmetro tenha proteção 777.
+ Faz com que o arquivo dado como parâmetro tenha proteção 777.
  c. rodeveja <caminho do programa>
-     Executa o programa indicado utilizando as chamadas fork(), execve() e wait().
-     Sua shell dever emitir uma mensagem indicando o código de retorno. Exemplo:
-         rodeveja /home/eu/naofaznada
-         => programa ‘/home/eu/naofaznada’ retorno
+ Executa o programa indicado utilizando as chamadas fork(), execve() e wait().
+ Sua shell dever emitir uma mensagem indicando o código de retorno. Exemplo:
+ rodeveja /home/eu/naofaznada
+ => programa ‘/home/eu/naofaznada’ retorno
  d. rode <caminho do programa>
-     Executa o programa indicado em background utilizando as chamadas fork() e
-     execve() . Sua shell deve monopolizar o teclado, a tela deve continuar
-     mostrando a saída da sua shell e do programa. Ao contrário do comando anterior,
-     a shell não deve retornar o código de saída do programa.
-*/
+ Executa o programa indicado em background utilizando as chamadas fork() e
+ execve() . Sua shell deve monopolizar o teclado, a tela deve continuar
+ mostrando a saída da sua shell e do programa. Ao contrário do comando anterior,
+ a shell não deve retornar o código de saída do programa.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,14 +69,14 @@ fileIsValid(char *filename) {
 char *
 getPath(char *bin) {
     char *path = strdup(getenv("PATH")),
-         *token, *ptr,
-         *buffer = malloc(strlen(path) + strlen(bin));
+    *token, *ptr,
+    *buffer = malloc(strlen(path) + strlen(bin));
     
     if (!buffer) {
         fprintf(stderr, "getPath(): not enough space for buffer!");
         return false;
     }
-
+    
     while ((token = strsep(&path, ":"))) {
         strcat(buffer, token);
         strcat(buffer, "/");
@@ -130,7 +130,7 @@ processArgs(Queue *q) {
     assert(!queue_isEmpty(q));
     
     char *token = queue_dequeue(q),
-         *arg   = queue_dequeue(q);
+    *arg   = queue_dequeue(q);
     if (!token || !arg) {
         PRINTINSTR
         return;
@@ -149,8 +149,8 @@ processArgs(Queue *q) {
     else if (strcmp(token, "rodeveja") == 0) runBinary(arg, false);
     else if (strcmp(token, "rode") == 0) runBinary(arg, true);
     else PRINTINSTR
-    
-}
+        
+        }
 
 /**
  * parseArgs - quebra a linha em palavras e adiciona cada uma à fila
@@ -182,7 +182,7 @@ void readLoop() {
         q = parseArgs(b);
         processArgs(q);
     } while (n > 0);
-
+    
     /* limpeza */
     buffer_destroy(b);
     if (q) queue_destroy(q);
@@ -191,4 +191,5 @@ void readLoop() {
 int main(int argc, char **argv) {
     readLoop();
     return 0;
-}  
+}
+

@@ -6,7 +6,7 @@ BINDIR	= bin
 DEPDIR	= dep
 DATDIR	= data
 
-CC	= gcc
+CC	= clang
 MAC	= mac422shell
 CFLAGS	= -std=c99 -Ofast -msse2 -march=native -Wall -Wextra -Wpedantic -I$(HDRDIR)
 LFLAGS	=
