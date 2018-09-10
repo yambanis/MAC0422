@@ -101,8 +101,8 @@ int queue_enqueue(Queue *q, void *data, size_t dataSize) {
  */
 void *queue_dequeue(Queue *q) {
     if (queue_isEmpty(q) == 1) {
-        // comentando especialmente pro programa SHELL
-//        fprintf(stderr, "queue_dequeue: queue is empty!\n");
+        /* comentando especialmente pro programa SHELL*/
+        /*fprintf(stderr, "queue_dequeue: queue is empty!\n");*/
         return NULL;
     }
     void *data = q -> first -> data;

@@ -24,16 +24,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/stat.h>
-
-#include "ext/buffer.h"
-#include "ext/queue.h"
 
 #define PRINTINSTR printf("protegepracaramba <arquivo>\nliberageral <arquivo>\nrodeveja <programa>\nrode <programa>\n");
 
@@ -44,22 +40,20 @@ extern char **environ;
  */
 void
 clearNewLine(char *str) {
-    char *newline = strchr(str, 10);
-    *newline = '\0';
+    str[strlen(str) -1] = '\0';
 }
 
 /**
  * fileIsValid - checa se o arquivo passado existe
  */
-bool
+char
 fileIsValid(char *filename) {
     clearNewLine(filename);
-    
     struct stat buffer;
-    if (stat(filename, &buffer) == 0) return true;
+    if (stat(filename, &buffer) == 0) return 1;
     else {
-        fprintf(stderr, "file does not exist!\n");
-        return false;
+        fprintf(stderr, "Arquivo nao existe!\n");
+        return 0;
     }
 }
 
@@ -68,28 +62,44 @@ fileIsValid(char *filename) {
  */
 char *
 getPath(char *bin) {
-    char *path = strdup(getenv("PATH")),
-    *token, *ptr,
-    *buffer = malloc(strlen(path) + strlen(bin));
+    int pathSize = strlen(getenv("PATH"));
+    char *path = malloc(sizeof(char) * (pathSize + 1)),
+         *token, *ptr,
+         *buffer = malloc(strlen(path) * (sizeof(char)) + strlen(bin));
     
     if (!buffer) {
-        fprintf(stderr, "getPath(): not enough space for buffer!");
-        return false;
+        fprintf(stderr, "getPath(): sem espaco suficiente no buffer!");
+        return NULL;
     }
-    
-    while ((token = strsep(&path, ":"))) {
+
+    clearNewLine(bin);
+    /* copia o PATH e coloca a terminacao no final da str */
+    strcpy(path, getenv("PATH"));
+    path[pathSize] = '\0';
+
+    token = strtok(path, ":");
+    while (token != NULL) {
         strcat(buffer, token);
         strcat(buffer, "/");
         strcat(buffer, bin);
-        if (access(buffer, X_OK) == 0) return buffer;
+        if (access(buffer, X_OK) == 0){
+            free(path);
+            return buffer;
+        }    
         /* reseta o buffer */
         *buffer = '\0';
+        /*busca o proximo path*/
+        token = strtok(NULL, ":");
     }
     
     /* tenta rodar no wd */
     if (bin[0] == '.' && bin[1] == '/')
-        if (access(bin, X_OK) == 0) return bin;
+        if (access(bin, X_OK) == 0){ 
+            free(path);
+            return bin;
+        }    
     
+    free(path);
     return NULL;
 }
 
@@ -97,57 +107,74 @@ getPath(char *bin) {
  * runBinary - roda o programa em modo paralelo ou não
  */
 void
-runBinary(char *bin, bool paralelo) {
+runBinary(char *bin, char paralelo) {
     assert(bin);
-    clearNewLine(bin);
+
     if ((bin = getPath(bin))) {
         pid_t pid = fork();
         
         /* PROCESSO FILHO */
         if (pid == 0) {
-            if (paralelo) fclose(stdin);
+            if (paralelo){
+                fclose(stdin);
+                fclose(stderr);
+                fclose(stdout);
+            }    
             execve(bin, NULL, environ);
+            free(bin);
         }
         /* PROCESSO PAI */
         else {
             if (!paralelo) {
                 int childStatus;
                 pid_t tid = waitpid(pid, &childStatus, 0);
-                if (tid > 0) printf("=> programa '%s' %d\n", bin, childStatus);
+                if (tid > 0) printf("=> programa '%s' retornou %d\n", bin, WEXITSTATUS(childStatus));
                 else printf("waitpid(): erro\n");
+                free(bin);
             }
         }
     }
-    else printf("executável não existe no path!\n");
+    else printf("executavel nao existe no PATH!\n");
+    free(bin);
 }
 
 /**
  * processArgs - desempilha o primeiro arg e encaminha pra sua função
  */
 void
-processArgs(Queue *q) {
-    assert(q);
-    assert(!queue_isEmpty(q));
-    
-    char *token = queue_dequeue(q),
-    *arg   = queue_dequeue(q);
-    if (!token || !arg) {
+processArgs(char **args) {
+    struct stat buf;
+    int statchmod;
+    char *comando = args[0],
+         *arg = args[1];
+
+    if (!comando || !arg) {
         PRINTINSTR
         return;
     }
     
-    if (strcmp(token, "protegepracaramba") == 0) {
+    if (strcmp(comando, "protegepracaramba") == 0) {
         if (fileIsValid(arg)) {
             if (chmod(arg, 000) < 0) fprintf(stderr, "chmod(): erro!");
+            else {
+                stat(arg, &buf);
+                statchmod = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+                printf("novo modo do arquivo: %o\n",statchmod);
+            }    
         }
     }
-    else if (strcmp(token, "liberageral") == 0) {
+    else if (strcmp(comando, "liberageral") == 0) {
         if (fileIsValid(arg)) {
-            if (chmod(arg, 777) < 0) fprintf(stderr, "chmod(): erro!");
+            if (chmod(arg, 0777) < 0) fprintf(stderr, "chmod(): erro!");
+            else {
+                stat(arg, &buf);
+                statchmod = buf.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
+                printf("novo modo do arquivo: %o\n",statchmod);
+            }    
         }
     }
-    else if (strcmp(token, "rodeveja") == 0) runBinary(arg, false);
-    else if (strcmp(token, "rode") == 0) runBinary(arg, true);
+    else if (strcmp(comando, "rodeveja") == 0) runBinary(arg, 0);
+    else if (strcmp(comando, "rode") == 0) runBinary(arg, 1);
     else PRINTINSTR
         
         }
@@ -155,37 +182,54 @@ processArgs(Queue *q) {
 /**
  * parseArgs - quebra a linha em palavras e adiciona cada uma à fila
  */
-Queue *
-parseArgs(Buffer *b) {
-    assert(b);
-    
-    Queue *q = queue_new();
-    char *token;
-    
-    while ((token = strsep((char**) &b -> data, " ")))
-        queue_enqueue(q, token, strlen(token));
-    
-    return(q);
+char **
+parseArgs(char *line) {
+    int i = 0;
+    char *token, *ptr;
+    char **args = malloc(sizeof(char*) * 2);
+    if(!args) {
+        fprintf(stderr, "parseArgs(): nao ha espaco suficiente pros args!\n");
+        return NULL;
+    }
+
+    token = strtok(line, " ");
+    while(i < 2){
+        args[i] = malloc(sizeof(char) * (strlen(token) + 1));
+        strcpy(args[i], token);
+        args[i][strlen(token)] = '\0';
+        i++;
+        token = strtok(NULL, " ");
+    }
+
+    return(args);
 }
 
 /**
  * readLoop - faz o parse do stdin continuamente
  */
-void readLoop() {
-    Buffer *b = buffer_create(sizeof(char));
-    Queue *q;
-    int n;
-    
-    do {
-        printf("> ");
-        n = read_line(stdin, b);
-        q = parseArgs(b);
-        processArgs(q);
-    } while (n > 0);
-    
-    /* limpeza */
-    buffer_destroy(b);
-    if (q) queue_destroy(q);
+void
+readLoop(void) {
+    char *buffer = malloc(sizeof(char) * 256);
+    char **args;
+    int i = 0;
+    if (!buffer) {
+        fprintf(stderr, "readLoop(): nao ha espaco suficiente pro buffer!\n");
+        return;
+    }   
+    printf("> ");
+    while (fgets(buffer, 256, stdin) != NULL){
+        if (buffer[0] != '\n'){
+            args = parseArgs(buffer);
+            processArgs(args);
+        }
+    printf("> ");
+    }
+
+    free(buffer);
+    if (args) {
+        while(i<2) free(args[i++]);
+        free(args);
+    }
 }
 
 int main(int argc, char **argv) {

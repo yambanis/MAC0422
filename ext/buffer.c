@@ -50,7 +50,7 @@ void buffer_reset(Buffer *B) {
 void *buffer_push_back(Buffer *B) {
 	/* increases the buffer size by one member size */
 	B -> data = realloc(B -> data, ++B -> buffer_size * B -> member_size);
-	void *ptr = (char*) B -> data + ((B -> buffer_size - 1) * B -> member_size);
+	*ptr = (char*) B -> data + ((B -> buffer_size - 1) * B -> member_size);
 	B -> p = (size_t) ptr;
 	return ptr;
 }
